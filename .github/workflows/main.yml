@@ -3,8 +3,8 @@ name: Terraform CI/CD
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - main  # Diese Jobs werden automatisch bei einem Push auf den "main"-Branch ausgeführt
+  workflow_dispatch:  # Ermöglicht das manuelle Triggern für den "destroy"-Job
 
 jobs:
   init:
@@ -26,8 +26,7 @@ jobs:
   plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
-
+    needs: init  # Dieser Job wird automatisch nach init ausgeführt
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -43,8 +42,7 @@ jobs:
   apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
-
+    needs: plan  # Dieser Job wird automatisch nach plan ausgeführt
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -60,8 +58,7 @@ jobs:
   destroy:
     name: Terraform Destroy
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
-
+    if: github.event_name == 'workflow_dispatch'  # Dieser Job kann nur manuell getriggert werden
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
