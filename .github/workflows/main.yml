@@ -3,8 +3,8 @@ name: Terraform CI/CD
 on:
   push:
     branches:
-      - main  # Diese Jobs werden automatisch bei einem Push auf den "main"-Branch ausgeführt
-  workflow_dispatch:  # Ermöglicht das manuelle Triggern für den "destroy"-Job
+      - main  
+  workflow_dispatch:  
 
 jobs:
   init:
@@ -15,6 +15,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Cache Terraform files
+      uses: actions/cache@v3
+      with:
+        path: |
+          .terraform/
+          .terraform.lock.hcl
+        key: terraform-${{ github.ref }}
+
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
       with:
@@ -23,6 +31,14 @@ jobs:
     - name: Terraform Init
       run: terraform init
 
+    - name: Upload Terraform Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: terraform
+        path: |
+          .terraform/
+          .terraform.lock.hcl
+
   plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
@@ -30,6 +46,11 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+
+    - name: Download Terraform Artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: terraform
 
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
@@ -47,6 +68,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Download Terraform Artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: terraform
+
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
       with:
@@ -62,6 +88,11 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+
+    - name: Download Terraform Artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: terraform
 
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
