@@ -3,8 +3,8 @@ name: Terraform CI/CD
 on:
   push:
     branches:
-      - main  # Diese Jobs werden automatisch bei einem Push auf den "main"-Branch ausgeführt
-  workflow_dispatch:  # Ermöglicht das manuelle Triggern für den "destroy"-Job
+      - main
+  workflow_dispatch:
 
 jobs:
   init:
@@ -15,48 +15,24 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Cache Terraform files
-      uses: actions/cache@v3
-      with:
-        path: |
-          .terraform/
-          .terraform.lock.hcl
-        key: terraform-${{ github.ref }}
-
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: 1.5.5
 
-    - name: Fix permissions for Terraform Provider
-      run: chmod -R +x .terraform/providers/registry.terraform.io/hashicorp/aws/
-
     - name: Terraform Init
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: terraform init
-
-    - name: Upload Terraform Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: terraform
-        path: |
-          .terraform/
-          .terraform.lock.hcl
 
   plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
-    needs: init  # Dieser Job wird automatisch nach init ausgeführt
+    needs: init
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-
-    - name: Download Terraform Artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: terraform
-
-    - name: Fix permissions for Terraform Provider
-      run: chmod -R +x .terraform/providers/registry.terraform.io/hashicorp/aws/
 
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
@@ -64,23 +40,18 @@ jobs:
         terraform_version: 1.5.5
 
     - name: Terraform Plan
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: terraform plan
 
   apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
-    needs: plan  # Dieser Job wird automatisch nach plan ausgeführt
+    needs: plan
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-
-    - name: Download Terraform Artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: terraform
-
-    - name: Fix permissions for Terraform Provider
-      run: chmod -R +x .terraform/providers/registry.terraform.io/hashicorp/aws/
 
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
@@ -88,23 +59,18 @@ jobs:
         terraform_version: 1.5.5
 
     - name: Terraform Apply
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: terraform apply -auto-approve
 
   destroy:
     name: Terraform Destroy
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'  # Dieser Job kann nur manuell getriggert werden
+    if: github.event_name == 'workflow_dispatch'
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-
-    - name: Download Terraform Artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: terraform
-
-    - name: Fix permissions for Terraform Provider
-      run: chmod -R +x .terraform/providers/registry.terraform.io/hashicorp/aws/
 
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
@@ -112,7 +78,13 @@ jobs:
         terraform_version: 1.5.5
 
     - name: Terraform Plan Destroy
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: terraform plan -destroy
 
     - name: Terraform Destroy
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: terraform destroy -auto-approve
