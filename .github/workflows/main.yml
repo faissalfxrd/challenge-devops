@@ -3,8 +3,8 @@ name: Terraform CI/CD
 on:
   push:
     branches:
-      - main  
-  workflow_dispatch:  
+      - main  # Diese Jobs werden automatisch bei einem Push auf den "main"-Branch ausgeführt
+  workflow_dispatch:  # Ermöglicht das manuelle Triggern für den "destroy"-Job
 
 jobs:
   init:
@@ -27,6 +27,9 @@ jobs:
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: 1.5.5
+
+    - name: Fix permissions for Terraform Provider
+      run: chmod -R +x .terraform/providers/registry.terraform.io/hashicorp/aws/
 
     - name: Terraform Init
       run: terraform init
@@ -52,6 +55,9 @@ jobs:
       with:
         name: terraform
 
+    - name: Fix permissions for Terraform Provider
+      run: chmod -R +x .terraform/providers/registry.terraform.io/hashicorp/aws/
+
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
       with:
@@ -73,6 +79,9 @@ jobs:
       with:
         name: terraform
 
+    - name: Fix permissions for Terraform Provider
+      run: chmod -R +x .terraform/providers/registry.terraform.io/hashicorp/aws/
+
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
       with:
@@ -93,6 +102,9 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: terraform
+
+    - name: Fix permissions for Terraform Provider
+      run: chmod -R +x .terraform/providers/registry.terraform.io/hashicorp/aws/
 
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
